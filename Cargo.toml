@@ -7,9 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.0", features = ["full"] }
-warp = { git = "https://github.com/seanmonstar/warp" }
+tokio = { version = "0.2", features = ["full"] }
+tokio-postgres = "0.7"
+postgres = { version = "0.19", features = ["with-uuid-0_8"] }
+# warp = { git = "https://github.com/seanmonstar/warp" }
+warp = "0.2"
 ring = "0.16.19"
 data-encoding = "2.3.1"
 mobc = "0.7.0"
 mobc-postgres = "0.7.0"
+uuid = "0.8"
+sqlx = { version = "0.4.2", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
