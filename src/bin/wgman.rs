@@ -1,9 +1,50 @@
+use uuid::Uuid;
 use warp::{Filter, Rejection, Reply};
 
 type Result<T> = std::result::Result<T, Rejection>;
 
+use sqlx::postgres::PgPoolOptions;
+
+use wgman::config;
+
 #[tokio::main]
 async fn main() {
+    //db setup
+    // let config = Config::from_str("postgres://wireguarddb:postgres:kQHJZVrNz$VO@172.17.0.2:5432").unwrap();
+    let db_cfg = match config::get_db_cfg() {
+        Ok(cfg) => {cfg}
+        Err(err) => {
+            dbg!(err);
+            std::process::exit(1);
+        }
+    };
+    dbg!(&db_cfg);
+
+    let pool = match PgPoolOptions::new()
+        .max_connections(20)
+        .connect(&format!("postgres://{}:{}@{}:{}/{}", db_cfg.user, db_cfg.pw, db_cfg.host, db_cfg.port, db_cfg.name)).await {
+            Ok(pool) => {pool}
+            Err(err) => {
+                dbg!(err);
+                std::process::exit(1);
+            }
+        };
+    dbg!(&pool);
+
+    let row = match sqlx::query("SELECT * FROM public.\"User\"").fetch_all(&pool).await {
+        Ok(row) => {
+            row
+        },
+        Err(err) => {
+            dbg!(err);
+            std::process::exit(1);
+        }
+    };
+
+    println!("DB connection successful");
+
+
+    // warp setup
     let set = warp::path!("set" / String).and(warp::post());
     let remove = warp::path!("remove" / String).and(warp::post());
     let list = warp::path!("list" / String).and(warp::post());
