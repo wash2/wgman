@@ -158,21 +158,21 @@ pub mod dao {
     use uuid::Uuid;
     use crate::config::DbCfg;
 
-    #[derive(Debug, Clone, sqlx::FromRow)]
+    #[derive(Debug, Clone)]
     pub struct User {
         pub id: Uuid,
         pub name: String,
         pub is_admin: bool,
     }
 
-    #[derive(Debug, Clone, sqlx::FromRow)]
+    #[derive(Debug, Clone)]
     pub struct UserPassword {
         pub id: Uuid,
         pub password_hash: String,
         pub salt: String,
     }
 
-    #[derive(Debug, Clone, sqlx::FromRow)]
+    #[derive(Debug, Clone)]
     pub struct Interface {
         pub id: Uuid,
         pub name: String,
@@ -182,14 +182,14 @@ pub mod dao {
         pub fqdn: Option<String>,
     }
 
-    #[derive(Debug, Clone, sqlx::FromRow)]
+    #[derive(Debug, Clone)]
     pub struct InterfacePassword {
         pub id: Uuid,
         pub password_hash: String,
         pub salt: String,
     }
 
-    #[derive(Debug, Clone, sqlx::FromRow)]
+    #[derive(Debug, Clone)]
     pub struct PeerRelation {
         pub endpoint: Uuid,
         pub peer: Uuid,
