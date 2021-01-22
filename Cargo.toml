@@ -12,4 +12,5 @@ warp = "0.3"
 sqlx = { git = "https://github.com/launchbadge/sqlx.git", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
 uuid = "0.8"
 ipnetwork = "0.17.0"
+# wgman-core = { git = "https://github.com/wash2/wgman-core.git" }
 wgman-core = { path = "../wgman-core" }
