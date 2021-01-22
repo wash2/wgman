@@ -1,7 +1,8 @@
 use warp::{Filter};
 
-use wgman::{config, handlers::*, filters};
+use wgman::{handlers::*, filters};
 use wgman::dao::{connect};
+use wgman_core::config;
 
 #[tokio::main]
 async fn main() {
