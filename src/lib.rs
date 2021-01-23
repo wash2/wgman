@@ -152,14 +152,14 @@ pub mod handlers {
         match auth_type {
             AuthKind::Admin => {
                 let AdminPassword { id: _, password_hash, salt }: AdminPassword = dao::get_admin_pw(pool, name.clone()).await?;
-                match verify(&Hash { pbkdf2_hash: password_hash.as_bytes().try_into()?, salt: salt.as_bytes().try_into()? }, password) {
+                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into().expect("pbkdf2_hash with incorrect length"), salt: salt[..].try_into().expect("salt with incorrect length") }, password) {
                     Ok(_) => {Ok(())}
                     Err(_) => {Err("invalid login")?}
                 }
             }
             AuthKind::Interface => {
                 let InterfacePassword { id: _, password_hash, salt }: InterfacePassword = dao::get_interface_pw(pool, name.clone()).await?;
-                match verify(&Hash { pbkdf2_hash: password_hash.as_bytes().try_into()?, salt: salt.as_bytes().try_into()? }, password) {
+                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into().expect("pbkdf2_hash with incorrect length"), salt: salt[..].try_into().expect("salt with incorrect length") }, password) {
                     Ok(_) => {Ok(())}
                     Err(_) => {Err("invalid login")?}
                 }
