@@ -557,15 +557,16 @@ pub mod filters {
     }
 }
 
-pub mod tests {
-    fn run_dao_test<T>(test: T) -> ()
-    where T: FnOnce() -> () + panic::UnwindSafe
-    {
-        setup();    
-        let result = panic::catch_unwind(|| {
-            test()
-        });    
-        teardown();    
-        assert!(result.is_ok())
-    }
-}
+// TODO add unit tests
+// pub mod tests {
+//     fn run_dao_test<T>(test: T) -> ()
+//     where T: FnOnce() -> () + panic::UnwindSafe
+//     {
+//         setup();    
+//         let result = panic::catch_unwind(|| {
+//             test()
+//         });    
+//         teardown();    
+//         assert!(result.is_ok())
+//     }
+// }
