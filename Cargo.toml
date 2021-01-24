@@ -1,6 +1,6 @@
 [package]
 name = "wgman"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Ashley Wulber"]
 repository = "https://github.com/wash2/wgman-core.git"
 edition = "2018"
@@ -17,5 +17,8 @@ warp = "0.2"
 sqlx = { version = "0.4", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
 uuid = "0.8"
 ipnetwork = "0.17"
-# wgman-core = { path = "../wgman-core" }
-wgman-core = "0.2.0"
+wgman-core = { path = "../wgman-core" }
+# wgman-core = "0.2.0"
+
+[dev-dependencies]
+futures = "0.3"
