@@ -1,6 +1,6 @@
 pub mod dao {
     use sqlx::{Pool, Postgres, postgres::PgPoolOptions};
-    use wgman_core::types::{ApiInterface, ApiPeerRelation, Interface, InterfacePassword, PeerRelation, Admin, AdminPassword};
+    use wgman_core::types::{ApiPeerRelation, Interface, InterfacePassword, PeerRelation, Admin, AdminPassword};
     use wgman_core::config::DbCfg;
 
     pub async fn connect(db_cfg: DbCfg) -> Result<Pool<Postgres>, sqlx::Error> {
@@ -11,34 +11,62 @@ pub mod dao {
         )
     }
 
-    pub async fn get_user_by_name(pool: &Pool<Postgres>, name: String) -> Result<Admin, sqlx::Error> {
-        Ok(sqlx::query_as!(Admin, "SELECT * FROM public.admin Where u_name = $1", name).fetch_one(pool).await?)
+    pub async fn list_users(pool: &Pool<Postgres>) -> Result<Vec<Admin>, sqlx::Error> {
+        Ok(sqlx::query_as::<_, Admin>("SELECT * FROM public.admin")
+        .fetch_all(pool)
+        .await?)
     }
 
-    pub async fn delete_user_by_name(pool: &Pool<Postgres>, name: String) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(Admin, "DELETE FROM public.admin Where u_name = $1", name).execute(pool).await?;
+    pub async fn delete_user(pool: &Pool<Postgres>, Admin { u_name, .. }: Admin) -> Result<(), sqlx::Error> {
+        sqlx::query_as::<_, Admin>( "DELETE FROM public.admin Where u_name = $1")
+        .bind(u_name)
+        .fetch_all(pool)
+        .await?;
+        Ok(())
+    }
+
+    pub async fn set_user(pool: &Pool<Postgres>, Admin { u_name, is_root, .. }: Admin) -> Result<(), sqlx::Error> {
+        sqlx::query_as::<_, Admin>( "INSERT INTO public.interface (
+            u_name, is_root
+            ) VALUES ($1, $2)
+            ON CONFLICT (u_name)
+            DO UPDATE SET
+              is_root = EXCLUDED.is_root ;
+        ")
+        .bind(u_name)
+        .bind(is_root)
+        .fetch_all(pool)
+        .await?;
         Ok(())
     }
 
     pub async fn get_interfaces(pool: &Pool<Postgres>) -> Result<Vec<Interface>, sqlx::Error> {
-        Ok(sqlx::query_as!(Interface, "SELECT * FROM public.interface").fetch_all(pool).await?)
+        Ok(sqlx::query_as::<_, Interface>("SELECT * FROM public.interface")
+        .fetch_all(pool)
+        .await?)
     }
 
     pub async fn get_interface_by_name(pool: &Pool<Postgres>, name: String) -> Result<Interface, sqlx::Error> {
-        Ok(sqlx::query_as!(Interface, "SELECT * FROM public.interface Where u_name = $1", name).fetch_one(pool).await?)
+        Ok(sqlx::query_as::<_, Interface>("SELECT * FROM public.interface Where u_name = $1")
+        .bind(name)
+        .fetch_one(pool)
+        .await?)
     }
 
     pub async fn get_peer_relation_interfaces(pool: &Pool<Postgres>, ApiPeerRelation { peer_name, endpoint_name, .. }: &ApiPeerRelation) -> Result<Vec<Interface>, sqlx::Error> {
-        Ok(sqlx::query_as!(Interface, "SELECT * FROM public.interface Where u_name = $1 OR u_name = $2", peer_name, endpoint_name).fetch_all(pool).await?)
+        Ok(sqlx::query_as::<_, Interface>("SELECT * FROM public.interface Where u_name = $1 OR u_name = $2")
+        .bind(peer_name)
+        .bind(endpoint_name)
+        .fetch_all(pool)
+        .await?)
     }
 
-    pub async fn set_interface(pool: &Pool<Postgres>, ApiInterface { u_name, public_key, port, ip, fqdn, }: &ApiInterface) -> Result<(), sqlx::Error> {
+    pub async fn set_interface(pool: &Pool<Postgres>, Interface { u_name, public_key, port, ip, fqdn, .. }: &Interface) -> Result<(), sqlx::Error> {
         sqlx::query("INSERT INTO public.interface (
             name, public_key, port, ip, fqdn
             ) VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT (u_name)
             DO UPDATE SET
-              u_name = EXCLUDED.u_name,
               public_key = EXCLUDED.public_key,
               port = EXCLUDED.port,
               ip = EXCLUDED.ip,
@@ -54,33 +82,52 @@ pub mod dao {
     }
 
     pub async fn delete_interface(pool: &Pool<Postgres>, name: String) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(Interface, "DELETE FROM public.interface Where u_name = $1", name).execute(pool).await?;
+        sqlx::query_as::<_, Interface>("DELETE FROM public.interface Where u_name = $1")
+        .bind(name)
+        .fetch_all(pool)
+        .await?;
         Ok(())
     }
 
     pub async fn get_admin_pw(pool: &Pool<Postgres>, name: String) -> Result<AdminPassword, sqlx::Error> {
-        Ok(sqlx::query_as!(AdminPassword, "SELECT pw.id, password_hash, salt FROM public.admin u INNER JOIN public.admin_password pw ON u.id= pw.id WHERE u_name = $1", name).fetch_one(pool).await?)
+        Ok(sqlx::query_as::<_, AdminPassword>("SELECT pw.id, password_hash, salt FROM public.admin u INNER JOIN public.admin_password pw ON u.id= pw.id WHERE u_name = $1")
+        .bind(name)
+        .fetch_one(pool)
+        .await?)
     }
 
     pub async fn get_interface_pw(pool: &Pool<Postgres>, name: String) -> Result<InterfacePassword, sqlx::Error> {
-        Ok(sqlx::query_as!(InterfacePassword, "SELECT pw.id, password_hash, salt FROM public.admin i INNER JOIN public.interface_password pw ON i.id= pw.id WHERE u_name = $1", name).fetch_one(pool).await?)
+        Ok(sqlx::query_as::<_, InterfacePassword>("SELECT pw.id, password_hash, salt FROM public.admin i INNER JOIN public.interface_password pw ON i.id= pw.id WHERE u_name = $1")
+        .bind(name)
+        .fetch_one(pool)
+        .await?)
     }
 
     pub async fn get_peers(pool: &Pool<Postgres>, name: String) -> Result<Vec<PeerRelation>, sqlx::Error> {
-        Ok(sqlx::query_as!(PeerRelation, "SELECT * FROM public.peer_relation Where endpoint_name = $1", name).fetch_all(pool).await?)
+        Ok(sqlx::query_as::<_, PeerRelation>("SELECT * FROM public.peer_relation Where endpoint_name = $1")
+        .bind(name)
+        .fetch_all(pool)
+        .await?)
     }
 
     pub async fn get_endpoints(pool: &Pool<Postgres>, name: String) -> Result<Vec<PeerRelation>, sqlx::Error> {
-        Ok(sqlx::query_as!(PeerRelation, "SELECT * FROM public.peer_relation Where peer_name = $1", name).fetch_all(pool).await?)
+        Ok(sqlx::query_as::<_, PeerRelation>("SELECT * FROM public.peer_relation Where peer_name = $1")
+        .bind(name)
+        .fetch_all(pool)
+        .await?)
     }
 
     pub async fn delete_peer_relation(pool: &Pool<Postgres>, peer: String, endpoint: String) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(PeerRelation, "DELETE FROM public.peer_relation Where peer_name = $1 AND endpoint_name = $2", peer, endpoint).execute(pool).await?;
+        sqlx::query_as::<_, PeerRelation>("DELETE FROM public.peer_relation Where peer_name = $1 AND endpoint_name = $2")
+        .bind(peer)
+        .bind(endpoint)
+        .fetch_all(pool)
+        .await?;
         Ok(())
     }
 
-    pub async fn set_peer_relation(pool: &Pool<Postgres>, ApiPeerRelation { peer_name, peer_allowed_ip, endpoint_name, endpoint_allowed_ip, .. }: &ApiPeerRelation) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(PeerRelation, "INSERT INTO public.peer_relation (
+    pub async fn set_peer_relation(pool: &Pool<Postgres>, PeerRelation { peer_name, peer_allowed_ip, endpoint_name, endpoint_allowed_ip, .. }: &PeerRelation) -> Result<(), sqlx::Error> {
+        sqlx::query_as::<_, PeerRelation>("INSERT INTO public.peer_relation (
             peer_name, endpoint_name, peer_allowed_ip, endpoint_allowed_ip
             ) VALUES ($1, $2, $3, $4)
             ON CONFLICT (peer_name, endpoint_name)
@@ -89,32 +136,42 @@ pub mod dao {
               peer_allowed_ip = EXCLUDED.peer_allowed_ip,
               endpoint_name = EXCLUDED.endpoint_name,
               endpoint_allowed_ip = EXCLUDED.endpoint_allowed_ip ;
-        ", peer_name, endpoint_name, peer_allowed_ip, endpoint_allowed_ip)
-        .execute(pool).await?;
+        ")
+        .bind(peer_name)
+        .bind(endpoint_name)
+        .bind(peer_allowed_ip)
+        .bind(endpoint_allowed_ip)
+        .fetch_all(pool).await?;
         Ok(())
     }
 
-    pub async fn set_peer(pool: &Pool<Postgres>, ApiPeerRelation { peer_name, endpoint_name, peer_allowed_ip, .. }: &ApiPeerRelation) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(PeerRelation, "INSERT INTO public.peer_relation (
+    pub async fn set_peer(pool: &Pool<Postgres>, PeerRelation { peer_name, endpoint_name, peer_allowed_ip, .. }: &PeerRelation) -> Result<(), sqlx::Error> {
+        sqlx::query_as::<_, PeerRelation>("INSERT INTO public.peer_relation (
             peer_name, endpoint_name, peer_allowed_ip
             ) VALUES ($1, $2, $3)
             ON CONFLICT (peer_name, endpoint_name)
             DO UPDATE SET
               endpoint_allowed_ip = EXCLUDED.endpoint_allowed_ip ;
-        ", peer_name, endpoint_name, peer_allowed_ip)
-        .execute(pool).await?;
+        ")
+        .bind(peer_name)
+        .bind(endpoint_name)
+        .bind(peer_allowed_ip)
+        .fetch_all(pool).await?;
         Ok(())
     }
 
-    pub async fn set_endpoint(pool: &Pool<Postgres>, ApiPeerRelation { peer_name, endpoint_name, endpoint_allowed_ip, .. }: &ApiPeerRelation) -> Result<(), sqlx::Error> {
-        sqlx::query_as!(PeerRelation, "INSERT INTO public.peer_relation (
+    pub async fn set_endpoint(pool: &Pool<Postgres>, PeerRelation { peer_name, endpoint_name, endpoint_allowed_ip, .. }: &PeerRelation) -> Result<(), sqlx::Error> {
+        sqlx::query_as::<_, PeerRelation>("INSERT INTO public.peer_relation (
             peer_name, endpoint_name, endpoint_allowed_ip
             ) VALUES ($1, $2, $3)
             ON CONFLICT (peer_name, endpoint_name)
             DO UPDATE SET
               endpoint_allowed_ip = EXCLUDED.endpoint_allowed_ip ;
-        ", peer_name, endpoint_name, endpoint_allowed_ip)
-        .execute(pool).await?;
+        ")
+        .bind(peer_name)
+        .bind(endpoint_name)
+        .bind(endpoint_allowed_ip)
+        .fetch_all(pool).await?;
         Ok(())
     }
 }
@@ -146,20 +203,23 @@ pub mod handlers {
     struct UnknownErr;
     impl reject::Reject for UnknownErr {}
 
-    // TODO add input validation (avoid SQL injection)
+    #[derive(Debug)]
+    struct ValidationErr;
+    impl reject::Reject for ValidationErr {}
+    // TODO refactor authentication
 
     async fn authenticate(auth_type: &AuthKind, BasicAuth { name, password } : &BasicAuth, pool: &Pool<Postgres>) -> Result<(), Box<dyn Error>> {
         match auth_type {
             AuthKind::Admin => {
                 let AdminPassword { id: _, password_hash, salt }: AdminPassword = dao::get_admin_pw(pool, name.clone()).await?;
-                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into().expect("pbkdf2_hash with incorrect length"), salt: salt[..].try_into().expect("salt with incorrect length") }, password) {
+                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into()?, salt: salt[..].try_into()? }, password) {
                     Ok(_) => {Ok(())}
                     Err(_) => {Err("invalid login")?}
                 }
             }
             AuthKind::Interface => {
                 let InterfacePassword { id: _, password_hash, salt }: InterfacePassword = dao::get_interface_pw(pool, name.clone()).await?;
-                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into().expect("pbkdf2_hash with incorrect length"), salt: salt[..].try_into().expect("salt with incorrect length") }, password) {
+                match verify(&Hash { pbkdf2_hash: password_hash[..].try_into()?, salt: salt[..].try_into()? }, password) {
                     Ok(_) => {Ok(())}
                     Err(_) => {Err("invalid login")?}
                 }
@@ -182,7 +242,13 @@ pub mod handlers {
             AuthKind::Interface if bauth.name == interface.u_name => Ok(()),
             _ => Err(reject::custom(AuthorizationErr))
         }?;
-        match dao::set_interface(&pool, &interface).await {
+        // validation
+        let interface: WarpResult<Interface> = match interface.try_into() {
+            Ok(i) => Ok(i),
+            Err(_) => Err(reject::custom(ValidationErr))
+        };
+
+        match dao::set_interface(&pool, &interface?).await {
             Ok(_) => Ok(()),
             Err(_) => Err(reject::custom(DatabaseErr))
         }?;
@@ -245,7 +311,7 @@ pub mod handlers {
             _ => Err(reject::custom(AuthorizationErr))
         }?;
 
-        match dao::set_peer(&pool, &pr).await {
+        match dao::set_peer(&pool, &pr.into()).await {
             Ok(_) => Ok(()),
             Err(_) => Err(reject::custom(DatabaseErr))
         }?;
@@ -279,7 +345,7 @@ pub mod handlers {
             _ => Err(reject::custom(AuthorizationErr))
         }?;
         
-        match dao::set_endpoint(&pool, &pr).await {
+        match dao::set_endpoint(&pool, &pr.into()).await {
             Ok(_) => Ok(()),
             Err(_) => Err(reject::custom(DatabaseErr))
         }?;
@@ -488,5 +554,18 @@ pub mod filters {
         .and(with_db(pool))
         .and(with_peer())
         .and_then(handlers::peer_relation_remove)
+    }
+}
+
+pub mod tests {
+    fn run_dao_test<T>(test: T) -> ()
+    where T: FnOnce() -> () + panic::UnwindSafe
+    {
+        setup();    
+        let result = panic::catch_unwind(|| {
+            test()
+        });    
+        teardown();    
+        assert!(result.is_ok())
     }
 }

@@ -3,16 +3,18 @@ FROM rust:1.49 as builder
 RUN USER=root cargo new --bin rust-docker-web
 WORKDIR ./rust-docker-web
 COPY ./Cargo.toml ./Cargo.toml
-ENV DATABASE_URL=$DATABASE_URL
-RUN env | grep DATABASE_URL
+ARG DATABASE_URL_ARG
+ENV DATABASE_URL==$DATABASE_URL_ARG
+RUN env | grep DATABASE_URL_ARG
 RUN cargo build --release
 RUN rm src/*.rs
 
 ADD . ./
 
 RUN rm ./target/release/deps/wgman*
-ENV DATABASE_URL=$DATABASE_URL
-RUN env | grep DATABASE_URL
+ARG DATABASE_URL_ARG
+ENV DATABASE_URL==$DATABASE_URL_ARG
+RUN env | grep DATABASE_URL_ARG
 RUN cargo build --release
 
 
