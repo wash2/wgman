@@ -17,8 +17,8 @@ warp = "0.2"
 sqlx = { version = "0.4", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
 uuid = "0.8"
 ipnetwork = "0.17"
-wgman-core = { path = "../wgman-core" }
-# wgman-core = "0.2.0"
+# wgman-core = { path = "../wgman-core" }
+wgman-core = "0.3.1"
 
 [dev-dependencies]
 futures = "0.3"
