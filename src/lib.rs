@@ -263,7 +263,6 @@ pub mod handlers {
             Ok(i) => Ok(i),
             Err(_) => Err(reject::custom(ValidationErr))
         };
-        println!("hi");
         match dao::set_interface(&pool, &interface?).await {
             Ok(_) => Ok(()),
             Err(err) => {
@@ -329,7 +328,6 @@ pub mod handlers {
             Err(_) => Err(reject::custom(ValidationErr))
         };
 
-        println!("setting pw");
         match dao::set_interface_pw(&pool, &pw?).await {
             Ok(_) => Ok(()),
             Err(err) => {
