@@ -9,16 +9,14 @@ description = "simple wireguard configuration management"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# tokio = { version = "1.0", features = ["full"] }
-tokio = { version = "0.2", features = ["full"] }
-# warp = "0.3"
-warp = "0.2"
-# sqlx = { git = "https://github.com/launchbadge/sqlx.git", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
-sqlx = { version = "0.4", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
-uuid = "0.8"
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls", "uuid", "ipnetwork", "postgres" ] }
 ipnetwork = "0.17"
-# wgman-core = { path = "../wgman-core" }
-wgman-core = "0.6"
+wgman-core = { path = "../wgman-core" }
+# wgman-core = "0.6"
+serde = "1"
+futures = "0.3"
 
 [dev-dependencies]
 futures = "0.3"
